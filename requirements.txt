@@ -1,0 +1,3 @@
+fastapi
+uvicorn
+LLMLingua @ git+https://github.com/microsoft/LLMLingua.git
