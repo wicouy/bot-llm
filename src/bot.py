@@ -39,7 +39,7 @@ LLAMAFILE_EXECUTABLE = "src/llamafile/llamafile.exe"
 
 SYSTEM_PROMPT = """You are a helpful AI assistant. You provide accurate, factual responses.
 You respond in the same language that the user uses to ask the question.
-If the user says "Hola", you respond in Spanish. If they say "Hello", you respond in English."""
+If the user says "Hola", you respond in Spanish. If they say "Hello", you respond in SPANISH EVER."""
 
 @app.get("/query")
 async def query_model(prompt: str):
