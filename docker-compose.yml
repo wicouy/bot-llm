@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  llm-service:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the models directory to persist model files
+      - ./src/models:/app/src/models
+      # Mount the llamafile directory
+      - ./src/llamafile:/app/src/llamafile
+    environment:
+      # Add environment variables if needed
+      - PYTHONUNBUFFERED=1
+    # Limit memory usage
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    # Ensure container restarts on failure
+    restart: unless-stopped
