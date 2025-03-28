@@ -10,9 +10,16 @@ services:
       - ./src/models:/app/src/models
       # Mount the llamafile directory
       - ./src/llamafile:/app/src/llamafile
+      # Mount temp directory for WSL compatibility
+      - /tmp:/tmp/wsltmp
     environment:
-      # Add environment variables if needed
       - PYTHONUNBUFFERED=1
+      - TMPDIR=/tmp/wsltmp
+    # Add capabilities needed for WSL
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
     # Limit memory usage
     deploy:
       resources:
@@ -20,5 +27,7 @@ services:
           memory: 4G
         reservations:
           memory: 2G
+    # Use host network for better WSL compatibility
+    network_mode: "host"
     # Ensure container restarts on failure
     restart: unless-stopped
