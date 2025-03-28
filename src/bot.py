@@ -77,26 +77,13 @@ app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 
 # Path to the Llama model and executable
-MODEL_PATH = "src/models/tinyllama-1.1b-chat-v1.0.Q2_K.gguf"
-LLAMAFILE_EXECUTABLE = "src/llamafile/llamafile.exe"
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "models/tinyllama-1.1b-chat-v1.0.Q2_K.gguf")
+LLAMAFILE_EXECUTABLE = os.path.join(os.path.dirname(__file__), "llamafile/llamafile.exe")
 
-SYSTEM_PROMPT = """
-#Role
-You are a helpful artificial intelligence assistant that provides accurate and objective answers, based only on verified and confirmed information.
-#Instructions
-- Answer questions clearly, concisely, and accurately.
-- Provide useful, relevant, and verified information.
-- Avoid speculative or suppositional answers.
-- If you don't have sufficient data, indicate that a definitive answer is not possible.
-#Behavior
-- Always answer in Spanish.
-- Never lie, fabricate information, or generate unconfirmed data.
-- Avoid hallucinations and random answers.
-- Always prioritize accuracy and consistency in each answer.
-#Answers
-- Provide complete and detailed answers without omitting important information.
-- If the answer requires nuance, clarify the limitations or conditions of the information.
-"""
+# Load system prompt from file
+PROMPT_PATH = os.path.join(os.path.dirname(__file__), "models/prompt.txt")
+with open(PROMPT_PATH, 'r', encoding='utf-8') as f:
+    SYSTEM_PROMPT = f.read()
 
 def clean_response(response: str) -> str:
     """Clean up the model response to extract only the assistant's reply."""
@@ -142,6 +129,8 @@ async def query_model(prompt: str, request: Request):
         # Format the prompt with system prompt and chat formatting
         formatted_prompt = f"<|system|>{SYSTEM_PROMPT}<|user|>{prompt}<|assistant|>"
         
+        logger.info(f"[{request_id}] Model path: {MODEL_PATH}")
+        logger.info(f"[{request_id}] Llamafile path: {LLAMAFILE_EXECUTABLE}")
         logger.info(f"[{request_id}] Starting llamafile process")
         model_start_time = time.time()
         
@@ -149,17 +138,16 @@ async def query_model(prompt: str, request: Request):
         process = await asyncio.create_subprocess_exec(
             LLAMAFILE_EXECUTABLE,
             "--model", MODEL_PATH,
-            "--temp", "0.1",            # Lower temperature for faster, more focused responses
-            "--ctx-size", "2048",       # Smaller context window for faster processing
-            "--batch-size", "512",      # Smaller batch size for quicker processing
-            "--threads", "4",           # Use 4 threads for good balance
-            "--top-k", "20",            # Lower top-k for faster sampling
-            "--top-p", "0.5",          # Lower top-p for more focused responses
-            "-n", "100",               # Limit maximum tokens to generate
-            "--repeat-penalty", "1.2",  # Slightly increase repetition penalty
-            "--seed", "-1",            # Set a seed for reproducibility
-            "-e",                      # Enable prompt escaping
-            "-p", formatted_prompt,
+            "--temp", "0.7",           # Temperatura balanceada para respuestas coherentes
+            "--ctx-size", "2048",      # Tamaño de contexto estándar
+            "--threads", "4",          # 4 hilos para buen rendimiento
+            "--batch-size", "512",     # Batch size optimizado
+            "--top-p", "0.9",         # Top-p sampling para mejor calidad
+            "--repeat-penalty", "1.1", # Penalización de repetición estándar
+            "-n", "400",              # Limitar tokens de salida para respuestas concisas
+            "--top-k", "40",          # Valor estándar para top-k sampling
+            "-e",                     # Habilitar escape de caracteres
+            "-p", formatted_prompt,    # El prompt formateado
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -210,4 +198,8 @@ async def query_model(prompt: str, request: Request):
 @app.get("/")
 def root():
     return {"message": "Welcome to the Llama model API!"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
