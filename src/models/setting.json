@@ -1,0 +1,20 @@
+{
+  "model_params": {
+    "ctx_size": "2048",
+    "threads": "4",
+    "temp": "0.3",
+    "n_predict": "400",
+    "repeat_penalty": "1.1",
+    "top_k": "40",
+    "batch_size": "512"
+  },
+  "chat_format": {
+    "system_prefix": "<|system|>",
+    "system_suffix": "",
+    "user_prefix": "<|user|>",
+    "user_suffix": "",
+    "assistant_prefix": "<|assistant|>",
+    "assistant_suffix": "",
+    "chat_mode": true
+  }
+}
