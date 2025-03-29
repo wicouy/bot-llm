@@ -193,8 +193,13 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 
-@app.get("/query")
-async def query_model(prompt: str, request: Request):
+@app.post("/query")
+async def query_model(request: Request):
+    # Extraer el prompt del cuerpo de la petición
+    body = await request.json()
+    prompt = body.get("prompt")
+    if not prompt:
+        return {"error": "No prompt provided"}
     """
     Endpoint to query the Llama model.
     :param prompt: The input prompt to send to the model.
